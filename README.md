@@ -4,6 +4,8 @@
 
 This is a simple FastAPI app that I use in the challenge of 30 Days of FastAPI.
 
+I am making a daily journal of my learning and progress on my blog [**Beyond 400**](https://blog.tomdu3.co.uk/)
+
 ---
 
 ## 🚀 30 Days of FastAPI: Learning Schedule
