@@ -1,5 +1,7 @@
 # My FastAPI App
 
+![FastAPI Logo](https://fastapi.tiangolo.com/img/logo-margin/logo-teal.png)
+
 This is a simple FastAPI app that I use in the challenge of 30 Days of FastAPI.
 
 ---
@@ -74,6 +76,8 @@ This is a simple FastAPI app that I use in the challenge of 30 Days of FastAPI.
 ## 📚 My Learning Resources
 
 I’ll be sticking to these high-quality resources to guide my 30-day sprint:
+
+- **Documentation:** [FastAPI Documentation](https://fastapi.tiangolo.com/en/latest/)
 
 -   **Course:** [FastAPI – Help You Develop APIs Quickly](https://www.freecodecamp.org/news/fastapi-helps-you-develop-apis-quickly/) by Beau Carnes (FreeCodeCamp).
     
