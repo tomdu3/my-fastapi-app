@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Path
 
 app = FastAPI()
 
@@ -7,11 +7,9 @@ app = FastAPI()
 async def read_root():
     return {"message": "Hello World", "version": "1.0"}
 
-
 @app.get("/items/{item_id}")
-async def read_item(item_id: int):
-    return {
-            "item_id": item_id,
-            "message": f"Fetching item {item_id}"
-            }
+async def read_item(
+    item_id: int = Path(..., title="The ID of the item", ge=1, le=1000)
+):
+    return {"item_id": item_id}
 
