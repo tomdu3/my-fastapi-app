@@ -1,0 +1,52 @@
+[
+  {
+    "id": 1,
+    "name": "Wireless Mouse",
+    "price": 25.99
+  },
+  {
+    "id": 2,
+    "name": "Mechanical Keyboard",
+    "price": 89.99
+  },
+  {
+    "id": 3,
+    "name": "HD Monitor",
+    "price": 199.99
+  },
+  {
+    "id": 4,
+    "name": "USB-C Hub",
+    "price": 45.50
+  },
+  {
+    "id": 5,
+    "name": "External Hard Drive",
+    "price": 120.00
+  },
+  {
+    "id": 6,
+    "name": "Webcam",
+    "price": 55.75
+  },
+  {
+    "id": 7,
+    "name": "Laptop Stand",
+    "price": 35.20
+  },
+  {
+    "id": 8,
+    "name": "Noise Cancelling Headphones",
+    "price": 150.00
+  },
+  {
+    "id": 9,
+    "name": "Portable Charger",
+    "price": 40.00
+  },
+  {
+    "id": 10,
+    "name": "Smartphone Holder",
+    "price": 15.99
+  }
+]
