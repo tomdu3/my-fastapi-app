@@ -2,42 +2,58 @@
   {
     "id": 1,
     "name": "Wireless Mouse",
-    "price": 25.99
+    "price": 25.99,
+    "description": "A wireless mouse for your computer",
+    "tax": 0.05
   },
   {
     "id": 2,
     "name": "Mechanical Keyboard",
-    "price": 89.99
+    "price": 89.99,
+    "description": "A mechanical keyboard for your computer",
+    "tax": 0.05
   },
   {
     "id": 3,
     "name": "HD Monitor",
-    "price": 199.99
+    "price": 199.99,
+    "description": "A HD monitor for your computer",
+    "tax": 0.05
   },
   {
     "id": 4,
     "name": "USB-C Hub",
-    "price": 45.50
+    "price": 45.50,
+    "description": "A USB-C hub for your computer",
+    "tax": 0.05
   },
   {
     "id": 5,
     "name": "External Hard Drive",
-    "price": 120.00
+    "price": 120.00,
+    "description": "An external hard drive for your computer",
+    "tax": 0.05
   },
   {
     "id": 6,
     "name": "Webcam",
-    "price": 55.75
+    "price": 55.75,
+    "description": "A webcam for your computer",
+    "tax": 0.05
   },
   {
     "id": 7,
     "name": "Laptop Stand",
-    "price": 35.20
+    "price": 35.20,
+    "description": "A laptop stand for your computer",
+    "tax": 0.05
   },
   {
     "id": 8,
     "name": "Noise Cancelling Headphones",
-    "price": 150.00
+    "price": 150.00,
+    "description": "Noise cancelling headphones for your computer",
+    "tax": 0.05
   },
   {
     "id": 9,
