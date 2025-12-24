@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Path
+from fastapi import FastAPI, Path, Query
 import json
 from pydantic import BaseModel
 
@@ -27,7 +27,22 @@ async def read_root():
     return {"message": "Hello World", "version": "2.0"}
 
 
-# Use the pydantic model to validate the request body
+@app.get("/items/")
+async def read_items(
+    q: str | None = Query(
+        None,
+        min_length=3,
+        max_length=50,
+        title="Search Query",
+        description="Search for items in the database",
+    )  # use Query to validate the query parameter - min_length and max_length are the minimum and maximum length of the query parameter
+):
+    results = [item for item in db if q.lower() in item.name.lower()] if q else db
+    if not results:
+        return {"message": "No items found"}
+    return results
+
+
 @app.post("/items/")
 async def create_item(item: Item):
     # check if the item already exists in the db
@@ -40,7 +55,10 @@ async def create_item(item: Item):
 
 
 @app.get("/items/{item_id}")
-async def read_item(item_id: int) -> dict:
+async def read_item(
+    item_id: int = Path(..., title="The ID of the item", gt=0, le=1000)
+) -> dict:  # use Path to validate the path parameter- gt and le are greater than and less than
+
     item = next((item for item in db if item.id == item_id), None)
     if item is None:
         return {"message": "Item not found"}
