@@ -14,6 +14,16 @@ class Item(BaseModel):
     description: str | None = None
     tax: float | None = None
 
+# define a pydantic model for the response
+class ItemPublic(BaseModel):
+    name: str
+    price: float
+    description: str | None = None
+
+class ItemResponse(BaseModel):
+    message: str
+    item: ItemPublic | None = None
+
 # read the contents of the db.json file - fake db
 with open("db.json") as f:
     db = json.load(f)
@@ -53,23 +63,24 @@ async def create_item(item: Item):
     db.append(item)
     return {"message": "Item added to db"}
 
-
-@app.get("/items/{item_id}")
+# returns a pydantic model for the response
+@app.get("/items/{item_id}", response_model=ItemResponse)
 async def read_item(
     item_id: int = Path(..., title="The ID of the item", gt=0, le=1000)
-) -> dict:  # use Path to validate the path parameter- gt and le are greater than and less than
+) -> ItemResponse:  # use Path to validate the path parameter- gt and le are greater than and less than
 
     item = next((item for item in db if item.id == item_id), None)
     if item is None:
-        return {"message": "Item not found"}
+        return ItemResponse(message="Item not found")
     tax_rate = getattr(item, 'tax', 0) or 0
     price_with_tax = item.price * (1 + tax_rate)
-    return {
-        "message": "Item found",
-        "id": item.id,
-        "name": item.name,
-        "price": price_with_tax,
-        "description": getattr(item, 'description', None),
-        "tax": tax_rate,
-    }
+    message = "Item found"
+    return ItemResponse(
+        message=message,
+        item=ItemPublic(
+            name=item.name,
+            price=price_with_tax,
+            description=item.description,
+        )
+    )
 
