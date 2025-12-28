@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Path, Query
+from fastapi import FastAPI, Path, Query, HTTPException
 import json
 from pydantic import BaseModel
 
@@ -53,11 +53,11 @@ async def read_items(
     return results
 
 
-@app.post("/items/")
+@app.post("/items/", status_code=201)
 async def create_item(item: Item):
     # check if the item already exists in the db
     if item.name in [item.name for item in db]:
-        return {"message": "Item already exists"}
+        raise HTTPException(status_code=400, detail="Item already exists")
     # add the item to the db
     item.id = len(db) + 1
     db.append(item)
@@ -71,7 +71,7 @@ async def read_item(
 
     item = next((item for item in db if item.id == item_id), None)
     if item is None:
-        return ItemResponse(message="Item not found")
+        raise HTTPException(status_code=404, detail="Item not found")
     tax_rate = getattr(item, 'tax', 0) or 0
     price_with_tax = item.price * (1 + tax_rate)
     message = "Item found"
