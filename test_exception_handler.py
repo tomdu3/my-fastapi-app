@@ -5,13 +5,14 @@ client = TestClient(app)
 
 def test_global_exception_handler_manual_404():
     # This triggers the manual raise HTTPException(status_code=404, detail="Item not found")
-    response = client.get("/items/99999")
+    # Must use ID <= 1000 to pass validation
+    response = client.get("/items/999")
     print(f"Manual 404 Response: {response.json()}")
     assert response.status_code == 404
     data = response.json()
     assert data["status"] == "error"
     assert data["message"] == "Item not found"
-    assert data["path"] == "/items/99999"
+    assert data["path"] == "/items/999"
     assert data["code"] == 404
     assert "timestamp" in data
 
