@@ -1,9 +1,25 @@
-from fastapi import FastAPI, Path, Query, HTTPException
+from fastapi import FastAPI, Path, Query, HTTPException, Request
+from fastapi.responses import JSONResponse
+from starlette.exceptions import HTTPException as StarletteHTTPException
+from datetime import datetime
 import json
 from pydantic import BaseModel
 
 
 app = FastAPI()
+
+@app.exception_handler(StarletteHTTPException)
+async def custom_http_exception_handler(request: Request, exc: StarletteHTTPException):
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={
+            "status": "error",
+            "message": exc.detail,
+            "path": request.url.path,
+            "code": exc.status_code,
+            "timestamp": datetime.now().isoformat()
+        },
+    )
 
 
 # define a pydantic model for the db
