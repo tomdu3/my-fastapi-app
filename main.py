@@ -8,6 +8,8 @@ from fastapi import (
     Form,
     File,
     UploadFile,
+    Header,
+    Cookie
 )
 
 from typing import Annotated
@@ -155,3 +157,36 @@ async def upload_with_description(
         "content_type": file.content_type,
         "size": len(contents)
     }
+
+# Header and Cookie Parameters
+@app.get("/items-user-agent/")
+async def read_items_user_agent(
+    user_agent: Annotated[str | None, Header()] = None
+):
+    """Read the User-Agent header from the request"""
+    return {"User-Agent": user_agent}
+
+
+@app.get("/items-header/")
+async def read_items_header(
+    x_token: Annotated[str, Header(min_length=10)] 
+):
+    """
+    Read a custom X-Token header with validation.
+    The token must be at least 10 characters long.
+    FastAPI automatically converts x_token to X-Token header.
+    """
+    return {"X-Token": x_token}
+
+
+@app.get("/items-cookie/")
+async def read_items_cookie(
+    ads_id: Annotated[str | None, Cookie()] = None,
+    session_id: Annotated[str | None, Cookie()] = None
+):
+    """Read cookies from the request (ads_id and session_id)"""
+    return {
+        "ads_id": ads_id,
+        "session_id": session_id
+    }
+
