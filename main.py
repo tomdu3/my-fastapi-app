@@ -1,3 +1,4 @@
+import time
 from fastapi import (
     FastAPI,
     Path,
@@ -11,6 +12,7 @@ from fastapi import (
     Header,
     Cookie
 )
+from fastapi.middleware.cors import CORSMiddleware
 
 from typing import Annotated
 from fastapi.responses import JSONResponse
@@ -23,6 +25,41 @@ from pydantic import BaseModel
 
 
 app = FastAPI()
+
+# ==================== CORS Configuration ====================
+# List of allowed origins for cross-origin requests
+origins = [
+    "http://localhost:3000",      # React/Next.js dev server
+    "http://localhost:5173",      # Vite dev server
+    "https://my-production-app.com",
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],  # Allow all HTTP methods (GET, POST, PUT, DELETE, etc.)
+    allow_headers=["*"],  # Allow all headers
+)
+
+
+# ==================== Custom Middleware ====================
+@app.middleware("http")
+async def add_process_time_header(request: Request, call_next):
+    """
+    Middleware that adds X-Process-Time header to every response.
+    This helps monitor API performance and identify slow endpoints.
+    """
+    start_time = time.time()
+    
+    # The request goes "down" into the path operation
+    response = await call_next(request)
+    
+    # The response comes "up" back through the middleware
+    process_time = time.time() - start_time
+    response.headers["X-Process-Time"] = f"{process_time:.4f}s"
+    
+    return response
 
 @app.exception_handler(StarletteHTTPException)
 async def custom_http_exception_handler(request: Request, exc: StarletteHTTPException):
