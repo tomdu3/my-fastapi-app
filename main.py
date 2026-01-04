@@ -1,4 +1,5 @@
 import time
+from contextlib import asynccontextmanager
 from fastapi import (
     FastAPI,
     Path,
@@ -21,10 +22,30 @@ from starlette.exceptions import (
 )
 from datetime import datetime
 import json
-from pydantic import BaseModel
+from sqlalchemy.orm import Session
+# SQLAlchemy imports
+from database import engine, Base, get_db
+from models import Item, ItemPublic, ItemResponse, ItemDB
+import models  # noqa: F401 - Import models to register them with Base
 
 
-app = FastAPI()
+# ==================== Database Initialization ====================
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """
+    Lifespan context manager for database initialization.
+    Creates all database tables on startup.
+    """
+    # Startup: Create all tables
+    Base.metadata.create_all(bind=engine)
+    print("✅ Database tables created successfully!")
+    yield
+    # Shutdown: Cleanup (if needed)
+    print("👋 Application shutting down...")
+
+
+app = FastAPI(lifespan=lifespan)
+
 
 # ==================== CORS Configuration ====================
 # List of allowed origins for cross-origin requests
@@ -75,35 +96,13 @@ async def custom_http_exception_handler(request: Request, exc: StarletteHTTPExce
     )
 
 
-# define a pydantic model for the db
-class Item(BaseModel):
-    id: int | None = None
-    name: str
-    price: float
-    description: str | None = None
-    tax: float | None = None
+# Pydantic models are now imported from models.py
+# - Item: for item creation and internal use
+# - ItemPublic: for public API responses
+# - ItemResponse: for structured API responses
 
-# define a pydantic model for the response
-class ItemPublic(BaseModel):
-    name: str
-    price: float
-    description: str | None = None
-
-class ItemResponse(BaseModel):
-    message: str
-    item: ItemPublic | None = None
-
-# read the contents of the db.json file - fake db
-with open("db.json") as f:
-    db = json.load(f)
-
-# convert the db to a list of pydantic models
-db = [Item(**item) for item in db]
-
-# Define the database dependency
-def get_db():
-    # In a real app, this is where you'd open a DB session
-    return db
+# Database logic has been moved to database.py and models.py
+# The local db.json file has been retired.
 
 
 @app.get("/")
@@ -113,48 +112,63 @@ async def read_root():
 
 @app.get("/items/")
 async def read_items(
-    database: Annotated[list, Depends(get_db)],
+    db: Annotated[Session, Depends(get_db)],
     q: str | None = Query(
         None,
         min_length=3,
         max_length=50,
         title="Search Query",
         description="Search for items in the database",
-    )  # use Query to validate the query parameter - min_length and max_length are the minimum and maximum length of the query parameter
+    )
 ):
-    results = [
-        item for item in database if q.lower() in item.name.lower()
-        ] if q else database
+    query = db.query(ItemDB)
+    if q:
+        query = query.filter(ItemDB.name.contains(q))
+    
+    results = query.all()
     if not results:
         return {"message": "No items found"}
     return results
 
 
 @app.post("/items/", status_code=201)
-async def create_item(item: Item, database: Annotated[list, Depends(get_db)]):
+async def create_item(item: Item, db: Annotated[Session, Depends(get_db)]):
     # check if the item already exists in the db
-    if item.name in [db_item.name for db_item in database]:
+    existing_item = db.query(ItemDB).filter(ItemDB.name == item.name).first()
+    if existing_item:
         raise HTTPException(status_code=400, detail="Item already exists")
-    # add the item to the db
-    item.id = len(database) + 1
-    database.append(item)
-    return {"message": "Item added to db"}
+    
+    # create new db item
+    db_item = ItemDB(
+        name=item.name,
+        price=item.price,
+        description=item.description,
+        tax=item.tax
+    )
+    
+    # add to database
+    db.add(db_item)
+    db.commit()
+    db.refresh(db_item)
+    
+    return {"message": "Item added to db", "id": db_item.id}
 
 # returns a pydantic model for the response
 @app.get("/items/{item_id}", response_model=ItemResponse)
 async def read_item(
-    database: Annotated[list, Depends(get_db)],
+    db: Annotated[Session, Depends(get_db)],
     item_id: int = Path(..., title="The ID of the item", gt=0, le=1000)
-) -> ItemResponse:  # use Path to validate the path parameter- gt and le are greater than and less than
+) -> ItemResponse:
 
-    item = next((db_item for db_item in database if db_item.id == item_id), None)
+    item = db.query(ItemDB).filter(ItemDB.id == item_id).first()
     if item is None:
         raise HTTPException(status_code=404, detail="Item not found")
-    tax_rate = getattr(item, 'tax', 0) or 0
+    
+    tax_rate = item.tax or 0
     price_with_tax = item.price * (1 + tax_rate)
-    message = "Item found"
+    
     return ItemResponse(
-        message=message,
+        message="Item found",
         item=ItemPublic(
             name=item.name,
             price=price_with_tax,
