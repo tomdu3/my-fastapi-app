@@ -25,7 +25,7 @@ import json
 from sqlalchemy.orm import Session
 # SQLAlchemy imports
 from database import engine, Base, get_db
-from models import Item, ItemPublic, ItemResponse, ItemDB
+from models import Item, ItemCreate, ItemPublic, ItemResponse, ItemDB
 import models  # noqa: F401 - Import models to register them with Base
 
 
@@ -131,50 +131,24 @@ async def read_items(
     return results
 
 
-@app.post("/items/", status_code=201)
-async def create_item(item: Item, db: Annotated[Session, Depends(get_db)]):
-    # check if the item already exists in the db
-    existing_item = db.query(ItemDB).filter(ItemDB.name == item.name).first()
-    if existing_item:
-        raise HTTPException(status_code=400, detail="Item already exists")
-    
-    # create new db item
-    db_item = ItemDB(
-        name=item.name,
-        price=item.price,
-        description=item.description,
-        tax=item.tax
-    )
-    
-    # add to database
+@app.post("/items/", response_model=ItemResponse, status_code=201)
+def create_item(item: ItemCreate, db: Session = Depends(get_db)):
+    # 1. Create the DB object
+    db_item = models.ItemDB(**item.dict())
+    # 2. Add and Commit
     db.add(db_item)
     db.commit()
+    # 3. Refresh to get the generated ID
     db.refresh(db_item)
-    
-    return {"message": "Item added to db", "id": db_item.id}
+    return {"message": "Item created", "item": db_item}
 
 # returns a pydantic model for the response
-@app.get("/items/{item_id}", response_model=ItemResponse)
-async def read_item(
-    db: Annotated[Session, Depends(get_db)],
-    item_id: int = Path(..., title="The ID of the item", gt=0, le=1000)
-) -> ItemResponse:
-
-    item = db.query(ItemDB).filter(ItemDB.id == item_id).first()
-    if item is None:
+@app.get("/items/{item_id}")
+def read_item(item_id: int, db: Session = Depends(get_db)):
+    item = db.query(models.ItemDB).filter(models.ItemDB.id == item_id).first()
+    if not item:
         raise HTTPException(status_code=404, detail="Item not found")
-    
-    tax_rate = item.tax or 0
-    price_with_tax = item.price * (1 + tax_rate)
-    
-    return ItemResponse(
-        message="Item found",
-        item=ItemPublic(
-            name=item.name,
-            price=price_with_tax,
-            description=item.description,
-        )
-    )
+    return item
 
 
 # Form Data and File Uploads

@@ -24,8 +24,16 @@ class ItemDB(Base):
 # ==================== Pydantic Models (Schemas) ====================
 
 class Item(BaseModel):
-    """Pydantic model for item creation and internal use."""
+    """Pydantic model for item internal use."""
     id: int | None = None
+    name: str
+    price: float
+    description: str | None = None
+    tax: float | None = None
+
+
+class ItemCreate(BaseModel):
+    """Pydantic model for receiving item data via POST."""
     name: str
     price: float
     description: str | None = None
