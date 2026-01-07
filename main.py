@@ -25,7 +25,7 @@ import json
 from sqlalchemy.orm import Session
 # SQLAlchemy imports
 from database import engine, Base, get_db
-from models import Item, ItemCreate, ItemPublic, ItemResponse, ItemDB
+from models import Item, ItemCreate, ItemUpdate, ItemPublic, ItemResponse, ItemDB
 import models  # noqa: F401 - Import models to register them with Base
 
 
@@ -149,6 +149,35 @@ def read_item(item_id: int, db: Session = Depends(get_db)):
     if not item:
         raise HTTPException(status_code=404, detail="Item not found")
     return item
+
+
+@app.patch("/items/{item_id}", response_model=ItemResponse)
+def update_item(item_id: int, item_update: ItemUpdate, db: Session = Depends(get_db)):
+    # 1. Find the item
+    db_item = db.query(models.ItemDB).filter(models.ItemDB.id == item_id).first()
+    if not db_item:
+        raise HTTPException(status_code=404, detail="Item not found")
+    
+    # 2. Update only the fields provided
+    update_data = item_update.dict(exclude_unset=True)
+    for key, value in update_data.items():
+        setattr(db_item, key, value)
+    
+    # 3. Save and return
+    db.commit()
+    db.refresh(db_item)
+    return {"message": "Item updated", "item": db_item}
+
+
+@app.delete("/items/{item_id}")
+def delete_item(item_id: int, db: Session = Depends(get_db)):
+    db_item = db.query(models.ItemDB).filter(models.ItemDB.id == item_id).first()
+    if not db_item:
+        raise HTTPException(status_code=404, detail="Item not found")
+    
+    db.delete(db_item)
+    db.commit()
+    return {"message": "Item deleted successfully"}
 
 
 # Form Data and File Uploads

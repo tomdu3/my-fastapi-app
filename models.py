@@ -40,6 +40,14 @@ class ItemCreate(BaseModel):
     tax: float | None = None
 
 
+class ItemUpdate(BaseModel):
+    """Pydantic model for receiving partial item data via PATCH."""
+    name: str | None = None
+    price: float | None = None
+    description: str | None = None
+    tax: float | None = None
+
+
 class ItemPublic(BaseModel):
     """Pydantic model for public API responses (hides internal fields)."""
     name: str
