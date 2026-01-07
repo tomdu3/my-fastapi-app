@@ -13,6 +13,7 @@ from fastapi import (
     Header,
     Cookie
 )
+from fastapi.security import OAuth2PasswordBearer
 from fastapi.middleware.cors import CORSMiddleware
 
 from typing import Annotated
@@ -104,6 +105,11 @@ async def custom_http_exception_handler(request: Request, exc: StarletteHTTPExce
 # Database logic has been moved to database.py and models.py
 # The local db.json file has been retired.
 
+# ==================== Security Configuration ====================
+# This defines the URL where the user will send their username/password
+# FastAPI will check for an Authorization header with a Bearer token.
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
+
 
 @app.get("/")
 async def read_root():
@@ -141,6 +147,18 @@ def create_item(item: ItemCreate, db: Session = Depends(get_db)):
     # 3. Refresh to get the generated ID
     db.refresh(db_item)
     return {"message": "Item created", "item": db_item}
+
+@app.get("/items/secret")
+async def read_secret_items(token: Annotated[str, Depends(oauth2_scheme)]):
+    """
+    A protected route that requires a valid Bearer token.
+    FastAPI will automatically look for the Authorization header.
+    """
+    return {
+        "token": token,
+        "message": "This is a protected route! Only authorized users can see this."
+    }
+
 
 # returns a pydantic model for the response
 @app.get("/items/{item_id}")
