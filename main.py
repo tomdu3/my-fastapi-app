@@ -13,8 +13,13 @@ from fastapi import (
     Header,
     Cookie
 )
-from fastapi.security import OAuth2PasswordBearer
+from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from fastapi.middleware.cors import CORSMiddleware
+import security
+from models import (
+    Item, ItemCreate, ItemUpdate, ItemPublic, ItemResponse, ItemDB,
+    Token, TokenData, User, UserInDB
+)
 
 from typing import Annotated
 from fastapi.responses import JSONResponse
@@ -26,7 +31,6 @@ import json
 from sqlalchemy.orm import Session
 # SQLAlchemy imports
 from database import engine, Base, get_db
-from models import Item, ItemCreate, ItemUpdate, ItemPublic, ItemResponse, ItemDB
 import models  # noqa: F401 - Import models to register them with Base
 
 
@@ -110,6 +114,42 @@ async def custom_http_exception_handler(request: Request, exc: StarletteHTTPExce
 # FastAPI will check for an Authorization header with a Bearer token.
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
+fake_users_db = {
+    "johndoe": {
+        "username": "johndoe",
+        "full_name": "John Doe",
+        "email": "johndoe@example.com",
+        "hashed_password": security.get_password_hash("secret"),
+        "disabled": False,
+    }
+}
+
+async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]):
+    """
+    Dependency to validate the JWT token and return the current user.
+    """
+    credentials_exception = HTTPException(
+        status_code=401,
+        detail="Could not validate credentials",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+    try:
+        # Decode the JWT
+        payload = security.jwt.decode(
+            token, security.SECRET_KEY, algorithms=[security.ALGORITHM]
+        )
+        username: str = payload.get("sub")
+        if username is None:
+            raise credentials_exception
+        token_data = TokenData(username=username)
+    except security.jwt.JWTError:
+        raise credentials_exception
+    
+    user = fake_users_db.get(token_data.username)
+    if user is None:
+        raise credentials_exception
+    return User(**user)
+
 
 @app.get("/")
 async def read_root():
@@ -148,15 +188,44 @@ def create_item(item: ItemCreate, db: Session = Depends(get_db)):
     db.refresh(db_item)
     return {"message": "Item created", "item": db_item}
 
-@app.get("/items/secret")
-async def read_secret_items(token: Annotated[str, Depends(oauth2_scheme)]):
+@app.post("/token", response_model=Token)
+async def login_for_access_token(
+    form_data: Annotated[OAuth2PasswordRequestForm, Depends()]
+):
     """
-    A protected route that requires a valid Bearer token.
-    FastAPI will automatically look for the Authorization header.
+    Endpoint to exchange username/password for a JWT access token.
+    Uses the OAuth2 Password Flow.
+    """
+    user_dict = fake_users_db.get(form_data.username)
+    if not user_dict:
+        raise HTTPException(
+            status_code=400,
+            detail="Incorrect username or password"
+        )
+    
+    user = UserInDB(**user_dict)
+    if not security.verify_password(form_data.password, user.hashed_password):
+        raise HTTPException(
+            status_code=400,
+            detail="Incorrect username or password"
+        )
+
+    # Create the token
+    access_token = security.create_access_token(
+        data={"sub": user.username}
+    )
+    return {"access_token": access_token, "token_type": "bearer"}
+
+
+@app.get("/items/secret")
+async def read_secret_items(current_user: Annotated[User, Depends(get_current_user)]):
+    """
+    A protected route that requires a valid JWT token.
+    Validation is handled by the get_current_user dependency.
     """
     return {
-        "token": token,
-        "message": "This is a protected route! Only authorized users can see this."
+        "message": f"Hello {current_user.username}! This is a protected route.",
+        "user_details": current_user
     }
 
 
