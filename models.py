@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Float
+from sqlalchemy import Column, Integer, String, Float, Boolean
 from pydantic import BaseModel
 from database import Base
 
@@ -62,6 +62,19 @@ class ItemResponse(BaseModel):
 
 
 # ==================== Auth Schemas ====================
+
+class UserDB(Base):
+    """
+    SQLAlchemy model for the users table.
+    """
+    __tablename__ = "users"
+
+    id = Column(Integer, primary_key=True, index=True)
+    username = Column(String, unique=True, index=True)
+    email = Column(String, unique=True, index=True, nullable=True)
+    full_name = Column(String, nullable=True)
+    hashed_password = Column(String)
+    disabled = Column(Boolean, default=False)
 
 class Token(BaseModel):
     """Schema for returning a JWT token."""
