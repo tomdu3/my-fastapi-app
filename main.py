@@ -124,9 +124,12 @@ fake_users_db = {
     }
 }
 
-async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]):
+async def get_current_user(
+    token: Annotated[str, Depends(oauth2_scheme)],
+    db: Annotated[Session, Depends(get_db)]
+):
     """
-    Dependency to validate the JWT token and return the current user.
+    Dependency to validate the JWT token and return the current user from the database.
     """
     credentials_exception = HTTPException(
         status_code=401,
@@ -141,14 +144,22 @@ async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]):
         username: str = payload.get("sub")
         if username is None:
             raise credentials_exception
-        token_data = TokenData(username=username)
     except security.jwt.JWTError:
         raise credentials_exception
     
-    user = fake_users_db.get(token_data.username)
+    # Fetch user from database
+    user = db.query(models.UserDB).filter(models.UserDB.username == username).first()
     if user is None:
         raise credentials_exception
-    return User(**user)
+    return user
+
+
+@app.get("/users/me", response_model=User)
+async def read_users_me(current_user: Annotated[User, Depends(get_current_user)]):
+    """
+    Returns the current authenticated user's profile.
+    """
+    return current_user
 
 
 @app.get("/")
@@ -190,20 +201,20 @@ def create_item(item: ItemCreate, db: Session = Depends(get_db)):
 
 @app.post("/token", response_model=Token)
 async def login_for_access_token(
-    form_data: Annotated[OAuth2PasswordRequestForm, Depends()]
+    form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
+    db: Annotated[Session, Depends(get_db)]
 ):
     """
     Endpoint to exchange username/password for a JWT access token.
-    Uses the OAuth2 Password Flow.
+    Uses the OAuth2 Password Flow and checks against the database.
     """
-    user_dict = fake_users_db.get(form_data.username)
-    if not user_dict:
+    user = db.query(models.UserDB).filter(models.UserDB.username == form_data.username).first()
+    if not user:
         raise HTTPException(
             status_code=400,
             detail="Incorrect username or password"
         )
     
-    user = UserInDB(**user_dict)
     if not security.verify_password(form_data.password, user.hashed_password):
         raise HTTPException(
             status_code=400,
