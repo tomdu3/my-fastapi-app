@@ -11,7 +11,8 @@ from fastapi import (
     File,
     UploadFile,
     Header,
-    Cookie
+    Cookie,
+    BackgroundTasks
 )
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from fastapi.middleware.cors import CORSMiddleware
@@ -160,6 +161,34 @@ async def read_users_me(current_user: Annotated[User, Depends(get_current_user)]
     Returns the current authenticated user's profile.
     """
     return current_user
+
+
+def send_welcome_email(email: str):
+    """
+    Simulates a slow network call (e.g., sending an email).
+    """
+    print(f"📧 Starting background task: Sending welcome email to {email}...")
+    time.sleep(5)
+    print(f"✅ Email sent to {email} after 5 seconds.")
+
+
+@app.post("/signup/", response_model=ItemResponse)
+async def signup(email: str, background_tasks: BackgroundTasks):
+    """
+    Simultates a user signup process.
+    The database operation is 'fast', while the email notification is 'slow'.
+    The user receives an immediate response while the email is 'sent' in the background.
+    """
+    # 1. Logic to save user to DB would go here (Simulated fast)
+    
+    # 2. Add the slow task to the background queue
+    background_tasks.add_task(send_welcome_email, email)
+    
+    # 3. Return response immediately
+    return {
+        "message": "Signup successful! Check your email in a few moments.",
+        "item": None  # We're using ItemResponse structure as requested
+    }
 
 
 @app.get("/")
