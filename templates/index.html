@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome to FastAPI</title>
+    <link rel="stylesheet" href="{{ url_for('static', path='/style.css') }}">
+</head>
+
+<body>
+    <div class="container">
+        <img src="{{ url_for('static', path='/tom_coder.jpg') }}" alt="Tom Coder" class="profile-image">
+        <h1>Welcome, {{ name }}!</h1>
+        <p>This page is served using Jinja2 templates and FastAPI.</p>
+        <p>Current request path: {{ request.url.path }}</p>
+    </div>
+</body>
+
+</html>
