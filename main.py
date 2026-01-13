@@ -14,6 +14,8 @@ from fastapi import (
     Cookie,
     BackgroundTasks
 )
+from fastapi.staticfiles import StaticFiles
+from fastapi.templating import Jinja2Templates
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from fastapi.middleware.cors import CORSMiddleware
 import security
@@ -51,6 +53,9 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(lifespan=lifespan)
+
+app.mount("/static", StaticFiles(directory="static"), name="static")
+templates = Jinja2Templates(directory="templates")
 
 
 # ==================== CORS Configuration ====================
@@ -189,6 +194,14 @@ async def signup(email: str, background_tasks: BackgroundTasks):
         "message": "Signup successful! Check your email in a few moments.",
         "item": None  # We're using ItemResponse structure as requested
     }
+
+
+@app.get("/welcome/{user_name}")
+async def welcome_user(request: Request, user_name: str):
+    return templates.TemplateResponse(
+        "index.html", 
+        {"request": request, "name": user_name}
+    )
 
 
 @app.get("/")
