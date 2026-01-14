@@ -9,14 +9,21 @@ def test_db_isolation(client):
     # 1. Create an item via the API (using the test database)
     response = client.post(
         "/items/",
-        json={"name": "Test Item", "price": 9.99, "description": "This should only be in test.db"}
+        json={
+            "name": "Test Item",
+            "price": 9.99,
+            "description": "This should only be in test.db"
+        }
     )
     assert response.status_code == 201
-    item_id = response.json()["item"]["name"] # The response model uses ItemPublic which doesn't have ID, but ItemResponse has 'item'
+    item_id = response.json()["item"]["name"] 
+    # The response model uses ItemPublic which doesn't have ID,
+    # but ItemResponse has 'item'
     
     # 2. Verify it's in the test database
-    # We can use the db_session fixture indirectly through the client or directly if we added it, 
-    # but let's just check the API again which we know uses the override.
+    # We can use the db_session fixture indirectly through the client
+    # or directly if we added it, but let's just check the API again
+    # which we know uses the override.
     get_response = client.get("/items/")
     assert get_response.status_code == 200
     items = get_response.json()
@@ -28,8 +35,12 @@ def test_db_isolation(client):
     if os.path.exists(prod_db_path):
         conn = sqlite3.connect(prod_db_path)
         cursor = conn.cursor()
-        # Check if the 'items' table exists first (it might not if it's a fresh setup)
-        cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='items';")
+        # Check if the 'items' table exists first
+        # (it might not if it's a fresh setup)
+        cursor.execute(
+            "SELECT name FROM sqlite_master WHERE type='table' AND"
+            " name='items';"
+        )
         if cursor.fetchone():
             cursor.execute("SELECT * FROM items WHERE name = 'Test Item'")
             row = cursor.fetchone()
