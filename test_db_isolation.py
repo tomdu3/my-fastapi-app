@@ -1,9 +1,13 @@
+import pytest
 import os
 import sqlite3
+from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+from config import settings
+from database import Base, get_db
+from main import app
 from models import ItemDB
-from database import SQLALCHEMY_DATABASE_URL as PROD_DATABASE_URL
 
 def test_db_isolation(client):
     # 1. Create an item via the API (using the test database)
@@ -31,7 +35,7 @@ def test_db_isolation(client):
 
     # 3. Verify the production database remains unchanged
     # Connect directly to the production DB file to check
-    prod_db_path = PROD_DATABASE_URL.replace("sqlite:///./", "")
+    prod_db_path = settings.database_url.replace("sqlite:///./", "")
     if os.path.exists(prod_db_path):
         conn = sqlite3.connect(prod_db_path)
         cursor = conn.cursor()
@@ -46,6 +50,7 @@ def test_db_isolation(client):
             row = cursor.fetchone()
             assert row is None, "Test Item found in production database!"
         conn.close()
+
 
 def test_test_db_creation():
     # This test doesn't use the client fixture initialy, 
