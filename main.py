@@ -19,7 +19,9 @@ from fastapi.templating import Jinja2Templates
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from fastapi.middleware.cors import CORSMiddleware
 import security
+from config import settings
 from models import (
+
     Item, ItemCreate, ItemUpdate, ItemPublic, ItemResponse, ItemDB,
     Token, TokenData, User, UserInDB
 )
@@ -145,8 +147,9 @@ async def get_current_user(
     try:
         # Decode the JWT
         payload = security.jwt.decode(
-            token, security.SECRET_KEY, algorithms=[security.ALGORITHM]
+            token, settings.secret_key, algorithms=[settings.algorithm]
         )
+
         username: str = payload.get("sub")
         if username is None:
             raise credentials_exception
@@ -207,6 +210,15 @@ async def welcome_user(request: Request, user_name: str):
 @app.get("/")
 async def read_root():
     return {"message": "Hello World", "version": "2.0"}
+
+
+@app.get("/info")
+async def get_info():
+    """
+    Demonstrates how to use settings in your application.
+    Returns app name and admin email from environment configuration.
+    """
+    return {"app_name": settings.app_name, "admin": settings.admin_email}
 
 
 @app.get("/items/")
