@@ -1,9 +1,9 @@
 from sqlalchemy.orm import Session
-from database import SessionLocal, engine, Base
-from models import UserDB
-import security
+from app.database import SessionLocal, engine, Base
+from app.models import UserDB
+import app.security as security
 from fastapi.testclient import TestClient
-from main import app
+from app.main import app
 
 # Create tables
 Base.metadata.create_all(bind=engine)

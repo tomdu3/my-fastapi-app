@@ -5,10 +5,10 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
-from database import Base, get_db
-from main import app
-import models
-import security
+from app.database import Base, get_db
+from app.main import app
+from app import models
+from app import security
 
 # 1. Setup a separate Test Database
 SQLALCHEMY_DATABASE_URL = "sqlite:///./test.db"

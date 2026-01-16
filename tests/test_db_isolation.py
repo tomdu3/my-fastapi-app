@@ -4,10 +4,10 @@ import sqlite3
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from config import settings
-from database import Base, get_db
-from main import app
-from models import ItemDB
+from app.config import settings
+from app.database import Base, get_db
+from app.main import app
+from app.models import ItemDB
 
 def test_db_isolation(client):
     # 1. Create an item via the API (using the test database)
