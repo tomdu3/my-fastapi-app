@@ -1,0 +1,10 @@
+__pycache__
+.venv
+.env
+.git
+*.db
+tests/
+.pytest_cache
+.python-version
+# We copy uv.lock in the Dockerfile
+
