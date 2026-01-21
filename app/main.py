@@ -1,3 +1,4 @@
+import logging
 import time
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request
@@ -9,6 +10,10 @@ from datetime import datetime
 
 from app.database import engine, Base
 from app.routers import items, users, misc
+
+# Configure basic logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger("api_logger")
 
 # ==================== Database Initialization ====================
 @asynccontextmanager
@@ -47,16 +52,28 @@ app.add_middleware(
 
 # ==================== Custom Middleware ====================
 @app.middleware("http")
-async def add_process_time_header(request: Request, call_next):
+async def log_requests(request: Request, call_next):
     start_time = time.time()
     response = await call_next(request)
-    process_time = time.time() - start_time
-    response.headers["X-Process-Time"] = f"{process_time:.4f}s"
+    process_time = (time.time() - start_time) * 1000
+    
+    # Log details as a structured-like message
+    logger.info(
+        f"method={request.method} path={request.url.path} "
+        f"status={response.status_code} duration={process_time:.2f}ms"
+    )
+    
+    # Keep the custom header for backward compatibility
+    response.headers["X-Process-Time"] = f"{process_time / 1000:.4f}s"
+    
     return response
 
 # ==================== Exception Handlers ====================
 @app.exception_handler(StarletteHTTPException)
 async def custom_http_exception_handler(request: Request, exc: StarletteHTTPException):
+    # Log the error before returning the response
+    logger.error(f"HTTP Error: {exc.detail} path={request.url.path} code={exc.status_code}")
+    
     return JSONResponse(
         status_code=exc.status_code,
         content={
