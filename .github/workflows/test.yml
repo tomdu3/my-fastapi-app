@@ -5,6 +5,9 @@ on: [push, pull_request]
 jobs:
   test:
     runs-on: ubuntu-latest
+    env:
+      ADMIN_EMAIL: "admin@example.com"
+      SECRET_KEY: "dummy-secret-key-for-testing"
     steps:
       - uses: actions/checkout@v4
 
