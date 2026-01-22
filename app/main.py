@@ -30,7 +30,48 @@ async def lifespan(app: FastAPI):
     print("👋 Application shutting down...")
 
 
-app = FastAPI(lifespan=lifespan)
+app = FastAPI(
+    title="Inventory Master API",
+    description="""
+    A high-performance API for managing global inventories.
+    
+    ## Items
+    You can **read** and **create** items.
+    
+    ## Users
+    You can **register** and **manage** profiles.
+    """,
+    version="1.0.2",
+    terms_of_service="https://example.com/terms/",
+    contact={
+        "name": "API Support",
+        "url": "https://example.com/support",
+        "email": "support@example.com",
+    },
+    openapi_tags=[
+        {
+            "name": "users",
+            "description": "Operations with users. The **login** logic is also here.",
+        },
+        {
+            "name": "items",
+            "description": "Manage items. So _fancy_ they have their own docs.",
+            "externalDocs": {
+                "description": "Items external docs",
+                "url": "https://fastapi.tiangolo.com/",
+            },
+        },
+        {
+            "name": "auth",
+            "description": "Authentication and authorization operations.",
+        },
+        {
+            "name": "miscellaneous",
+            "description": "Miscellaneous helper endpoints.",
+        },
+    ],
+    lifespan=lifespan
+)
 
 # Mount static files
 app.mount("/static", StaticFiles(directory="static"), name="static")

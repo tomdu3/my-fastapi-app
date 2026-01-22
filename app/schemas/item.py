@@ -16,6 +16,19 @@ class ItemCreate(BaseModel):
     description: str | None = None
     tax: float | None = None
 
+    model_config = {
+        "json_schema_extra": {
+            "examples": [
+                {
+                    "name": "Quantum Processor",
+                    "price": 999.99,
+                    "description": "A very fast CPU.",
+                    "tax": 80.0
+                }
+            ]
+        }
+    }
+
 
 class ItemUpdate(BaseModel):
     """Pydantic model for receiving partial item data via PATCH."""
@@ -24,12 +37,35 @@ class ItemUpdate(BaseModel):
     description: str | None = None
     tax: float | None = None
 
+    model_config = {
+        "json_schema_extra": {
+            "examples": [
+                {
+                    "price": 899.99,
+                    "description": "Updated fast CPU."
+                }
+            ]
+        }
+    }
+
 
 class ItemPublic(BaseModel):
     """Pydantic model for public API responses (hides internal fields)."""
     name: str
     price: float
     description: str | None = None
+
+    model_config = {
+        "json_schema_extra": {
+            "examples": [
+                {
+                    "name": "Quantum Processor",
+                    "price": 999.99,
+                    "description": "A very fast CPU."
+                }
+            ]
+        }
+    }
 
 
 class ItemResponse(BaseModel):

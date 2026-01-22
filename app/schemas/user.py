@@ -18,6 +18,19 @@ class User(BaseModel):
     full_name: str | None = None
     disabled: bool | None = None
 
+    model_config = {
+        "json_schema_extra": {
+            "examples": [
+                {
+                    "username": "johndoe",
+                    "email": "johndoe@example.com",
+                    "full_name": "John Doe",
+                    "disabled": False
+                }
+            ]
+        }
+    }
+
 
 class UserInDB(User):
     """Schema for user data stored in the database (includes hashed password)."""
