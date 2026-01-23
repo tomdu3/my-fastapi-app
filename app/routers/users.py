@@ -10,6 +10,8 @@ import app.security as security
 from app.config import settings
 from app.dependencies import get_current_user, send_welcome_email
 
+from app.repositories import UserRepository
+
 router = APIRouter(
     tags=["auth"],
 )
@@ -28,7 +30,8 @@ async def login_for_access_token(
     Endpoint to exchange username/password for a JWT access token.
     Uses the OAuth2 Password Flow and checks against the database.
     """
-    user = db.query(models.UserDB).filter(models.UserDB.username == form_data.username).first()
+    repo = UserRepository(db)
+    user = repo.get_by_username(form_data.username)
     if not user:
         raise HTTPException(
             status_code=400,
