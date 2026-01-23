@@ -81,6 +81,6 @@ I’ll be sticking to these high-quality resources to guide my 30-day sprint:
 
 - **Documentation:** [FastAPI Documentation](https://fastapi.tiangolo.com/en/latest/)
 
--   **Course:** [FastAPI – Help You Develop APIs Quickly](https://www.freecodecamp.org/news/fastapi-helps-you-develop-apis-quickly/) by Beau Carnes (FreeCodeCamp).
+-   **Course:** [FastAPI – Help You Develop APIs Quickly](https://www.freecodecamp.org/news/fastapi-helps-you-develop-apis-quickly/) by Beau Carnes (FreeCodeCamp), Course Video by Tomi Tokko (YouTube).
     
 -   **Book:** _FastAPI: Modern Python Web Development_ by Bill Lubanovic (O’Reilly).
